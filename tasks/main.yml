@@ -1,2 +1,39 @@
 ---
-# tasks file for helk-spark-master
+
+- name: Adding Spark group
+  group:
+    gid: "{{ SPARK_GID }}"
+    name: "{{ SPARK_USER }}"
+
+- name: Adding Spark user
+  user:
+    name: "{{ SPARK_USER }}"
+    uid: "{{ SPARK_UID }}"
+    group: "{{ SPARK_USER }}"
+    home: "{{ SPARK_HOME }}"
+    create_home: no
+    shell: /bin/bash
+
+- name: Installing Sparc dependencies
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - openjdk-8-jre-headless
+    - ca-certificates-java
+    - python3
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: Creating directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - /opt/helk/spark
+    - "{{ SPARK_LOGS }}"
+
+- name: Installing Spark
+  unarchive:
+    src: "https://mirror.reverse.net/pub/apache/spark/spark-{{ SPARK_VERSION }}/spark-{{ SPARK_VERSION }}-bin-hadoop{{ APACHE_HADOOP_VERSION }}.tgz"
+    dest: /opt/helk/spark
+    remote_src: yes
